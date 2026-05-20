@@ -1,0 +1,18 @@
+composer install 
+ cp .env.example .env
+npm install
+
+Untuk Menyalakan
+    docker compose up -d
+
+Untuk Mematikan 
+    docker compose down
+
+Untuk Cek Status 
+    docker-compose ps
+
+Cari tulisan allowPublicKeyRetrieval.
+Ubah false menjadi true.
+
+php artisan app:send-task-reminders
+php artisan schedule:work
