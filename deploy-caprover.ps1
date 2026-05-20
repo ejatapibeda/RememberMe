@@ -1,16 +1,20 @@
-# Deploy RememberME ke CapRover tanpa Git (pakai tarball)
-# Usage: .\deploy-caprover.ps1
-
+# Siapkan deploy CapRover (captain-definition saja, tanpa Dockerfile terpisah)
 $ErrorActionPreference = "Stop"
-$AppName = "rememberme"
-$CapRoverUrl = "http://202.150.156.39:9300"
 $TarFile = "deploy.tar.gz"
 
-Write-Host ">> Membuat arsip $TarFile ..." -ForegroundColor Cyan
+Write-Host ">> Build assets Vue (wajib sebelum deploy)..." -ForegroundColor Cyan
+if (-not (Test-Path "node_modules")) {
+    npm install
+}
+npm run build
+if (-not (Test-Path "public/build/manifest.json")) {
+    Write-Host "ERROR: public/build/manifest.json tidak ada. Build gagal." -ForegroundColor Red
+    exit 1
+}
 
+Write-Host ">> Membuat $TarFile ..." -ForegroundColor Cyan
 if (Test-Path $TarFile) { Remove-Item $TarFile -Force }
 
-# Pastikan captain-definition & Dockerfile ikut ter-pack
 tar -czf $TarFile `
     --exclude=node_modules `
     --exclude=vendor `
@@ -24,13 +28,9 @@ tar -czf $TarFile `
     --exclude=$TarFile `
     .
 
-Write-Host ">> Deploy ke CapRover (app: $AppName) ..." -ForegroundColor Cyan
-Write-Host "   Masukkan password dashboard CapRover jika diminta." -ForegroundColor Yellow
-
-caprover deploy -a $AppName -h $CapRoverUrl -t $TarFile
-
-if ($LASTEXITCODE -eq 0) {
-    Write-Host ">> Deploy selesai. Buka: http://${AppName}.202.150.156.39:9080" -ForegroundColor Green
-} else {
-    Write-Host ">> Deploy gagal (exit $LASTEXITCODE). Cek log di dashboard CapRover." -ForegroundColor Red
-}
+$sizeMb = [math]::Round((Get-Item $TarFile).Length / 1MB, 2)
+Write-Host ">> Selesai: $TarFile ($sizeMb MB)" -ForegroundColor Green
+Write-Host ""
+Write-Host "Deploy:" -ForegroundColor Yellow
+Write-Host "  1. Dashboard: http://202.150.156.39:9300 -> Apps -> rememberme -> Deployment -> upload $TarFile"
+Write-Host "  2. Atau: .\deploy-api.ps1 -AppToken TOKEN_ANDA"
