@@ -24,7 +24,8 @@ RUN composer install \
     --no-autoloader \
     --prefer-dist \
     --no-interaction \
-    --no-progress
+    --no-progress \
+    --ignore-platform-reqs
 
 # ---- Stage 3: production runtime (PHP-FPM + Nginx + Supervisor) ----
 FROM php:8.3-fpm-alpine AS app
