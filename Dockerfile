@@ -31,7 +31,8 @@ RUN composer install \
 FROM php:8.3-fpm-alpine AS app
 
 # System packages
-RUN apk add --no-cache nginx supervisor curl bash \
+RUN apk add --no-cache nginx supervisor curl bash ca-certificates \
+    && update-ca-certificates \
     && mkdir -p /run/nginx
 
 # PHP extensions
