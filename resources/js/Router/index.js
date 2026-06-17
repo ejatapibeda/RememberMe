@@ -8,6 +8,9 @@ import ResetPassword from "../Auth/ResetPassword.vue";
 import Register from "../Auth/Register.vue";
 import history from "../Pages/history.vue";
 import Profil from "../Pages/profil.vue";
+import Recurring from "../Pages/Recurring.vue";
+import CreateRecurring from "../Public/CreateRecurring.vue";
+import EditRecurring from "../Public/EditRecurring.vue";
 
 import CreateKategoriPage from "../Public/CreateKategoriPage.vue";
 import Kategori from "../Pages/Kategori.vue";
@@ -45,6 +48,9 @@ const routes = [
     { path: "/Edit_Kategori/:id", name: "edit-kategori", component: EditKategori, meta: { requiresAuth: true } },
     { path: "/Show_Kategori/:id", name: "show_kategori", component: ShowKategori, meta: { requiresAuth: true } },
     { path: "/history", name: "history", component: history, meta: { requiresAuth: true } },
+    { path: "/recurring", name: "recurring", component: Recurring, meta: { requiresAuth: true } },
+    { path: "/recurring/create", name: "create-recurring", component: CreateRecurring, meta: { requiresAuth: true } },
+    { path: "/recurring/edit/:id", name: "edit-recurring", component: EditRecurring, meta: { requiresAuth: true } },
 ];
 
 const router = createRouter({

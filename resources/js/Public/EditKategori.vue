@@ -1,98 +1,73 @@
 <template>
-  <div class="container mx-auto px-4 py-12 flex flex-col items-center">
-    <h1 class="font-kaushan text-4xl text-gray-800 mb-12">Edit Kategori</h1>
-    
-    <div class="w-full max-w-xl  p-8 rounded-3xl shadow-lg border border-gray-200">
-      <form @submit.prevent="handleUpdate">
-        <div class="mb-6">
-          <label class="block text-gray-700 text-sm font-bold mb-2">Nama Kategori</label>
-          <input 
-            v-model="form.nama_kategori" 
-            type="text" 
-            class="w-full px-4 py-3 rounded-xl border border-gray-200 outline-none focus:ring-2 focus:ring-sky-300 transition-all" 
-            required 
-          />
-        </div>
-        <div class="flex gap-4">
-          <button 
-            type="submit" 
-            :disabled="isLoading" 
-            class="flex-1 bg-[#87cefa] text-black font-bold py-3 rounded-full hover:bg-sky-400 transition-all shadow-md"
-          >
-            {{ isLoading ? 'Menyimpan...' : 'Simpan Perubahan' }}
-          </button>
-          <button 
-            type="button" 
-            @click="$router.back()" 
-            class="flex-1 bg-gray-200 text-gray-700 font-bold py-3 rounded-full hover:bg-gray-300 transition-all"
-          >
-            Batal
-          </button>
-        </div>
-      </form>
+  <div class="max-w-md mx-auto py-2">
+    <div class="flex items-center gap-2 mb-6">
+      <router-link to="/kategori" class="text-blue-600 hover:text-blue-700 font-semibold text-sm">← Kembali</router-link>
     </div>
+    <h1 class="font-kaushan text-4xl text-gray-800 mb-6">Edit Kategori</h1>
 
-    <AlertModal 
-      :show="alertConfig.show"
-      :type="alertConfig.type"
-      :title="alertConfig.title"
-      :message="alertConfig.message"
-      @confirm="handleAlertConfirm"
-    />
+    <GlassCard padding="lg">
+      <div class="space-y-5">
+        <div>
+          <label class="text-[10px] font-bold text-blue-600 uppercase tracking-widest">Nama Kategori</label>
+          <input v-model="form.nama_kategori" type="text"
+            class="mt-1 w-full px-4 py-3 bg-white/80 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-blue-400 focus:outline-none text-sm" />
+          <p v-if="errors.nama_kategori" class="text-xs text-rose-500 mt-1 italic">{{ errors.nama_kategori[0] }}</p>
+        </div>
+
+        <div class="flex gap-2">
+          <GradientButton variant="primary" :loading="isLoading" @click="submit">Simpan Perubahan</GradientButton>
+          <router-link to="/kategori">
+            <GradientButton variant="ghost">Batal</GradientButton>
+          </router-link>
+        </div>
+      </div>
+    </GlassCard>
+
+    <AlertModal :show="alert.show" :title="alert.title" :message="alert.message" :type="alert.type" @confirm="closeAlert" />
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, reactive } from 'vue';
+import { ref, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import { useKategoriStore } from '@/Stores/Kategori';
 import { storeToRefs } from 'pinia';
-import AlertModal from "../components/AlertModal.vue"; 
+import AlertModal from '@/components/AlertModal.vue';
+import GlassCard from '@/components/GlassCard.vue';
+import GradientButton from '@/components/GradientButton.vue';
+import { useKategoriStore } from '@/Stores/Kategori';
 
 const route = useRoute();
 const router = useRouter();
 const kategoriStore = useKategoriStore();
-const { isLoading } = storeToRefs(kategoriStore);
+const { isLoading, errors } = storeToRefs(kategoriStore);
 
 const form = ref({ nama_kategori: '' });
-
-// State untuk mengatur AlertModal
-const alertConfig = reactive({
-  show: false,
-  type: 'success',
-  title: '',
-  message: ''
-});
+const alert = ref({ show: false, title: '', message: '', type: 'success' });
+const id = route.params.id;
 
 onMounted(async () => {
-  const data = await kategoriStore.fetchKategoriById(route.params.id);
-  if (data) {
-    form.value.nama_kategori = data.nama_kategori;
-  }
+  const data = await kategoriStore.fetchKategoriById(id);
+  if (data) form.value.nama_kategori = data.nama_kategori;
 });
 
-const handleUpdate = async () => {
-  const success = await kategoriStore.updateKategori(route.params.id, form.value);
-  
-  if (success) {
-    alertConfig.type = 'success';
-    alertConfig.title = 'Berhasil!';
-    alertConfig.message = 'Kategori berhasil diperbarui.';
-    alertConfig.show = true;
-  } else {
-    alertConfig.type = 'error';
-    alertConfig.title = 'Gagal!';
-    alertConfig.message = 'Terjadi kesalahan saat memperbarui kategori.';
-    alertConfig.show = true;
-  }
+const submit = async () => {
+  const ok = await kategoriStore.updateKategori(id, form.value);
+  alert.value = {
+    show: true,
+    title: ok ? 'Tersimpan' : 'Gagal',
+    message: ok ? 'Kategori berhasil diperbarui.' : 'Tidak bisa menyimpan.',
+    type: ok ? 'success' : 'error',
+  };
 };
 
-// Fungsi yang dijalankan saat tombol OK di modal diklik
-const handleAlertConfirm = () => {
-  alertConfig.show = false;
-  // Jika sukses, baru kita pindah halaman
-  if (alertConfig.type === 'success') {
-    router.push(`/Show_Kategori/${route.params.id}`);
-  }
+const closeAlert = () => {
+  const ok = alert.value.type === 'success';
+  alert.value.show = false;
+  if (ok) router.push('/kategori');
 };
 </script>
+
+<style scoped>
+@import url('https://fonts.googleapis.com/css2?family=Kaushan+Script&display=swap');
+.font-kaushan { font-family: 'Kaushan Script', cursive; }
+</style>

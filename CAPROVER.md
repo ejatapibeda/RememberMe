@@ -1,6 +1,6 @@
-# Deploy RememberME di CapRover (Laravel + Vue)
+# Deploy RememberME di CapRover via GitHub (Laravel 12 + Vue 3)
 
-Build menggunakan **`captain-definition`** saja (tanpa file `Dockerfile` terpisah). CapRover akan membangun image dari `dockerfileLines` di dalam file itu.
+CapRover meng-clone repo GitHub dan membangun image dari **`Dockerfile`** di root (ditunjuk oleh [`captain-definition`](captain-definition)). Dockerfile bersifat multi-stage dan **membangun aset Vue + menginstal dependensi sendiri**, jadi tidak perlu `npm run build` atau tarball manual.
 
 ## Prasyarat
 
@@ -26,7 +26,7 @@ CREATE DATABASE rememberme CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 APP_NAME=RememberME
 APP_ENV=production
 APP_DEBUG=false
-APP_KEY=base64:GANTI_DENGAN_KEY_BARU
+APP_KEY=base64:bc/2sPgktNhu1X1ZC4Nam6ZXXU4gBdBojMrxKpdg2nk=
 APP_URL=http://rememberme.202.150.156.39:9080
 APP_TIMEZONE=Asia/Jakarta
 
@@ -46,59 +46,70 @@ LOG_LEVEL=error
 
 VITE_API_URL=/api
 RUN_MIGRATIONS=true
+
+# Telegram Bot (isi token bot dari @BotFather)
+TELEGRAM_BOT_TOKEN=
+TELEGRAM_BOT_USERNAME=kwanremindbot
+TELEGRAM_WEBHOOK_SECRET=
+TELEGRAM_VERIFY_SSL=true
 ```
 
-Generate key lokal: `php artisan key:generate --show`
+> `APP_KEY` di atas sudah di-generate untuk Anda. Boleh dipakai langsung atau ganti dengan `php artisan key:generate --show`.
 
-## 3. Deploy
+## 3. Deploy via GitHub
 
-### Langkah 1 — Build & buat tarball
+### Langkah 1 — Push ke GitHub
 
 ```powershell
-cd Final
-.\deploy-caprover.ps1
+git add .
+git commit -m "Production build untuk CapRover"
+git push origin main
 ```
 
-Script ini:
-- `npm run build` (Vue → `public/build/`)
-- Membuat `deploy.tar.gz` (termasuk `captain-definition`, `docker/`, kode Laravel)
-
-### Langkah 2 — Upload
-
-**Dashboard (disarankan):**
+### Langkah 2 — Hubungkan repo di CapRover
 
 1. `http://202.150.156.39:9300` → **Apps** → **rememberme** → **Deployment**
-2. **Deploy via tarball** → upload `deploy.tar.gz`
-3. Tunggu build selesai (lihat **App Logs**)
+2. Bagian **Method 3: Deploy from Github/Bitbucket/Gitlab**
+   - **Repository**: `github.com/<user>/<repo>`
+   - **Branch**: `main`
+   - **Username** + **Password/Token**: gunakan GitHub Personal Access Token (scope `repo`)
+3. Klik **Save & Update**, lalu **Force Build**.
+4. (Opsional) Aktifkan auto-deploy: salin **webhook URL** yang muncul ke GitHub repo → **Settings → Webhooks**. Setiap `git push` akan otomatis build ulang.
+5. Pantau progres di **App Logs**.
 
-**Atau API (CLI caprover sering gagal untuk IP:9300):**
+## 4. Cara kerja build (`Dockerfile`)
 
-```powershell
-.\deploy-api.ps1 -AppToken TOKEN_DARI_DASHBOARD
-```
+[`captain-definition`](captain-definition) menunjuk ke `./Dockerfile` (multi-stage):
 
-Jangan pakai `caprover deploy -h ...` — URL berubah ke `captain.202.150.156.39` dan gagal.
-
-## 4. Isi `captain-definition`
-
-File [`captain-definition`](captain-definition) berisi:
-
-- PHP 8.3-FPM + Nginx di **port 80**
-- `composer install --no-dev`
-- Entrypoint: migrate, config cache, `storage:link`
-- Menggunakan config di folder `docker/` (nginx, supervisord, entrypoint)
+- **Stage `assets`** (`node:20`): `npm ci` + `npm run build` → `public/build/`
+- **Stage `vendor`** (`composer:2`): `composer install --no-dev`
+- **Stage `app`** (`php:8.3-fpm-alpine`): Nginx + PHP-FPM + Supervisor di **port 80**
+- **Supervisor** menjalankan: `php-fpm`, `nginx`, **`schedule:work`** (reminder tugas/Telegram tiap menit), dan **`queue:work`**
+- **Entrypoint** ([`docker/entrypoint.sh`](docker/entrypoint.sh)): buat DB jika belum ada, `migrate --force`, `storage:link`, lalu `config/route/view:cache`
 
 ## 5. Verifikasi
 
 - [ ] Build sukses di App Logs
 - [ ] `http://rememberme.202.150.156.39:9080` tampil SPA
 - [ ] Login / register / buat tugas berfungsi
+- [ ] Reminder Telegram terkirim (cek log `scheduler`)
 
 ## Troubleshooting
 
 | Masalah | Solusi |
 |---------|--------|
-| Blank page, no JS | Jalankan `npm run build` lalu deploy ulang |
-| 502 Bad Gateway | Port container harus **80** |
-| DB error | Cek `DB_HOST`, buat DB `rememberme`, password MySQL `iaas_paas@01` |
-| Build gagal composer | Pastikan `composer.lock` ikut di tarball |
+| Blank page, no JS | Cek log build stage `assets`; pastikan `package-lock.json` ter-commit |
+| 502 Bad Gateway | Container HTTP Port harus **80** |
+| DB error | Cek `DB_HOST`, buat DB `rememberme`, password MySQL benar |
+| `APP_KEY` warning | Set `APP_KEY` di App Configs (lihat bawah) |
+| Reminder tidak jalan | Cek program `scheduler` di App Logs (Supervisor) |
+
+## Generate APP_KEY
+
+Lokal: `php artisan key:generate --show`, atau pakai yang sudah di-generate:
+
+```
+APP_KEY=base64:bc/2sPgktNhu1X1ZC4Nam6ZXXU4gBdBojMrxKpdg2nk=
+```
+
+> Letakkan nilai ini di **App Configs** CapRover, **jangan** commit `.env` ke GitHub.

@@ -1,191 +1,90 @@
 <template>
-    <div class="container mx-auto px-4 py-12 flex flex-col items-center min-h-screen">
-        <h1 class="font-kaushan text-4xl text-gray-800 mb-10">Detail Tugas</h1>
-
-        <div v-if="tugasStore.isLoading" class="text-xl font-kaushan animate-pulse">Memuat...</div>
-
-        <div v-else-if="tugas" class="relative w-full max-w-2xl transform transition-all hover:scale-[1.01]">
-            <div 
-                class="rounded-[40px] shadow-xl p-10 pt-16 min-h-[350px] relative flex flex-col justify-between border border-white/50 backdrop-blur-sm"
-                :class="currentTheme.bg"
-            >
-                <div 
-                    class="absolute -top-4 left-8 px-6 py-3 rounded-2xl flex items-center gap-3 shadow-lg border border-white/60 transition-all duration-500"
-                    :style="{ backgroundColor: tugas.prioritas === 'ya' ? '#FFDF5E' : 'rgba(255, 255, 255, 0.8)' }"
-                >
-                    <CalendarDaysIcon class="w-6 h-6 text-gray-800" />
-                    <span class="font-sans font-bold text-gray-700">
-                        {{ formatDateTime(tugas.tanggal) }}
-                    </span>
-                    <span v-if="tugas.prioritas === 'ya'" class="text-xs animate-bounce">⭐</span>
-                </div>
-
-                <div class="absolute top-8 right-10">
-                    <span class="bg-white/40 px-4 py-1 rounded-full font-dancing text-2xl text-gray-800 shadow-sm border border-white/20">
-                        {{ tugas.kategori?.nama_kategori || 'Kategori' }}
-                    </span>
-                </div>
-
-                <div class="mt-10 mb-12 px-2">
-                    <p class="text-gray-800 text-3xl leading-relaxed font-kaushan text-center italic" :class="currentTheme.text">
-                        {{ tugas.tugas }}
-                    </p>
-                </div>
-
-                <div class="flex justify-center gap-4">
-                    <button 
-                        @click="router.push({ name: 'edit-tugas', params: { id: tugas.id } })"
-                        class="bg-white/80 hover:bg-white text-gray-800 font-bold px-10 py-3 rounded-full transition-all shadow-md active:scale-95 flex items-center gap-2"
-                    >
-                        <span>✏️</span> Edit
-                    </button>
-                    <button 
-                        @click="handleDeleteRequest"
-                        class="bg-red-500/80 hover:bg-red-500 text-white font-bold px-10 py-3 rounded-full transition-all shadow-md active:scale-95 flex items-center gap-2"
-                    >
-                        <span>🗑️</span> Hapus
-                    </button>
-                </div>
-            </div>
-        </div>
-        
-        <div v-else class="text-red-500 font-kaushan text-xl mt-10 bg-white p-4 rounded-xl shadow">
-            Tugas tidak ditemukan.
-        </div>
-
-        <AlertModal 
-            :show="alertConfig.show"
-            :type="alertConfig.type"
-            :title="alertConfig.title"
-            :message="alertConfig.message"
-            :show-cancel="alertConfig.showCancel"
-            @confirm="handleAlertConfirm"
-            @cancel="handleAlertCancel"
-        />
+  <div class="max-w-2xl mx-auto py-2">
+    <div class="flex items-center gap-2 mb-6">
+      <router-link to="/tugas" class="text-blue-600 hover:text-blue-700 font-semibold text-sm">← Kembali</router-link>
     </div>
+
+    <div v-if="isLoading" class="text-center py-10">
+      <div class="inline-block w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+    </div>
+
+    <GlassCard v-else-if="tugas" padding="lg">
+      <div class="flex items-start gap-4 mb-5">
+        <div
+          class="w-14 h-14 rounded-2xl flex items-center justify-center text-2xl bg-gradient-to-br from-blue-100 to-cyan-100">
+          📌
+        </div>
+        <div class="flex-1 min-w-0">
+          <div class="flex flex-wrap gap-2 mb-2">
+            <CountdownBadge :target="tugas.tanggal" />
+            <span v-if="tugas.prioritas === 'ya'"
+              class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800">
+              🔥 PRIORITAS
+            </span>
+            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold"
+              :class="tugas.is_done ? 'bg-emerald-100 text-emerald-700' : tugas.its_over ? 'bg-rose-100 text-rose-700' : 'bg-blue-100 text-blue-700'">
+              {{ tugas.is_done ? 'SELESAI' : tugas.its_over ? 'TERLEWAT' : 'AKTIF' }}
+            </span>
+          </div>
+          <h1 class="font-kaushan text-3xl text-gray-800 leading-tight">{{ tugas.tugas }}</h1>
+          <p class="text-sm text-gray-500 mt-1">{{ tugas.kategori?.nama_kategori || 'Tanpa Kategori' }}</p>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4">
+        <div class="bg-white/70 border border-gray-100 rounded-2xl p-4">
+          <p class="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">Deadline</p>
+          <p class="text-sm font-semibold text-gray-800">{{ formatDateTime(tugas.tanggal) }}</p>
+        </div>
+        <div class="bg-white/70 border border-gray-100 rounded-2xl p-4">
+          <p class="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">Kategori</p>
+          <p class="text-sm font-semibold text-gray-800">{{ tugas.kategori?.nama_kategori || '—' }}</p>
+        </div>
+      </div>
+
+      <div class="flex gap-2 mt-6 flex-wrap">
+        <router-link :to="`/Edit_tugas/${tugas.id}`">
+          <GradientButton variant="primary">Edit</GradientButton>
+        </router-link>
+        <GradientButton variant="success" v-if="!tugas.is_done" @click="markDone">Tandai Selesai</GradientButton>
+      </div>
+    </GlassCard>
+
+    <div v-else class="text-center py-20 opacity-60">
+      <p class="font-kaushan text-3xl text-gray-400">Tugas tidak ditemukan</p>
+    </div>
+  </div>
 </template>
 
 <script setup>
-import { ref, onMounted, reactive } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
-import { CalendarDaysIcon } from '@heroicons/vue/24/outline';
-import AlertModal from "../components/AlertModal.vue"; 
+import { ref, onMounted } from 'vue';
+import { useRoute } from 'vue-router';
 import { useTugasStore } from '@/Stores/Tugas';
+import GlassCard from '@/components/GlassCard.vue';
+import GradientButton from '@/components/GradientButton.vue';
+import CountdownBadge from '@/components/CountdownBadge.vue';
 
-// 1. Inisialisasi Router & Store
 const route = useRoute();
-const router = useRouter();
 const tugasStore = useTugasStore();
-
-// 2. State Management
 const tugas = ref(null);
-const currentTheme = ref({ bg: 'bg-blue-100', text: 'text-blue-900' });
+const isLoading = ref(true);
 
-// Konfigurasi Alert/Modal
-const alertConfig = reactive({
-    show: false,
-    type: 'success',
-    title: '',
-    message: '',
-    isConfirming: false,
-    showCancel: false
-});
-
-// Daftar palet warna pastel Sky Blue
-const themes = [
-    { bg: 'bg-[#E0F2FE]', text: 'text-blue-900' }, // Sky Blue 100
-    { bg: 'bg-[#CCEAFF]', text: 'text-sky-900' },  // Sky Blue 50
-    { bg: 'bg-[#E0FCFF]', text: 'text-cyan-900' }, // Cyan
-    { bg: 'bg-[#ECFEFF]', text: 'text-teal-900' }, // Teal
-    { bg: 'bg-[#EEF2FF]', text: 'text-indigo-900' }, // Indigo
-    { bg: 'bg-[#F5F3FF]', text: 'text-violet-900' }, // Violet
-];
-
-// 3. Lifecycle Hooks (Digabung menjadi satu)
 onMounted(async () => {
-    // Pilih tema warna secara acak
-    currentTheme.value = themes[Math.floor(Math.random() * themes.length)];
-
-    // Ambil data tugas berdasarkan ID dari URL
-    const id = route.params.id;
-    if (id) {
-        const result = await tugasStore.showTugas(id);
-        tugas.value = result; 
-    }
+  tugas.value = await tugasStore.showTugas(route.params.id);
+  isLoading.value = false;
 });
 
-// 4. Helper Functions
-const formatDateTime = (date) => {
-    if (!date) return "";
-    const d = new Date(date);
-    return d.toLocaleDateString('id-ID', { 
-        day: '2-digit', 
-        month: '2-digit', 
-        year: 'numeric' 
-    }).replace(/\//g, '-');
-};
+const formatDateTime = (s) => s
+  ? new Date(s).toLocaleString('id-ID', { day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+  : '';
 
-// 5. Logic Hapus & Modal
-const handleDeleteRequest = () => {
-    alertConfig.type = 'error';
-    alertConfig.title = 'Konfirmasi';
-    alertConfig.message = 'Apakah Anda yakin ingin menghapus tugas ini?';
-    alertConfig.isConfirming = true;
-    alertConfig.showCancel = true;
-    alertConfig.show = true;
-};
-
-const handleAlertCancel = () => {
-    alertConfig.show = false;
-    alertConfig.isConfirming = false;
-    alertConfig.showCancel = false;
-};
-
-const handleAlertConfirm = async () => {
-    // Jika dalam mode tanya/konfirmasi
-    if (alertConfig.isConfirming) {
-        alertConfig.show = false;
-        alertConfig.isConfirming = false;
-        alertConfig.showCancel = false;
-
-        const success = await tugasStore.deleteTugas(tugas.value.id);
-        
-        // Tampilkan modal hasil eksekusi
-        if (success) {
-            alertConfig.type = 'success';
-            alertConfig.title = 'Terhapus!';
-            alertConfig.message = 'Tugas berhasil dihapus dari daftar.';
-            alertConfig.show = true;
-        } else {
-            alertConfig.type = 'error';
-            alertConfig.title = 'Gagal!';
-            alertConfig.message = 'Terjadi kesalahan saat menghapus tugas.';
-            alertConfig.show = true;
-        }
-    } else {
-        // Jika modal hasil sukses diklik OK, arahkan kembali ke list tugas
-        alertConfig.show = false;
-        if (alertConfig.type === 'success') {
-            router.push('/tugas');
-        }
-    }
+const markDone = async () => {
+  const ok = await tugasStore.updateStatus(tugas.value.id, true);
+  if (ok) tugas.value.is_done = true;
 };
 </script>
 
 <style scoped>
-    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&family=Dancing+Script:wght@600;700&family=Kaushan+Script&display=swap');
-
-    .font-kaushan {
-        font-family: 'Segoe Print', cursive;
-        /* font-family: 'Kaushan Script', cursive; */
-    }
-
-    .font-dancing {
-        font-family: 'Sanchez', cursive;
-        /* font-family: 'Dancing Script', cursive; */
-    }
-
-    .font-poppins {
-        font-family: 'Poppins', sans-serif;
-    }
+@import url('https://fonts.googleapis.com/css2?family=Kaushan+Script&display=swap');
+.font-kaushan { font-family: 'Kaushan Script', cursive; }
 </style>

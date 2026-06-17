@@ -1,124 +1,56 @@
 <template>
-  <div class="container mx-auto px-4 py-12 flex flex-col items-center">
-    <h1 class="font-kaushan text-4xl text-gray-800 mb-12">Detail Kategori</h1>
-
-    <div v-if="isLoading" class="text-gray-500 font-poppins">Memuat data...</div>
-
-    <div v-else-if="currentKategori" class="w-full max-w-3xl bg-[#e6ffed] rounded-2xl p-10 flex flex-col md:flex-row items-center justify-between shadow-sm">
-      <h2 class="text-2xl font-medium text-gray-800 font-serif">
-        {{ currentKategori.nama_kategori }}
-      </h2>
-
-      <div class="flex gap-4 mt-6 md:mt-0">
-        <router-link 
-          :to="`/Edit_Kategori/${currentKategori.id}`"
-          class="px-8 py-1.5 bg-[#87cefa] text-black font-bold rounded-full hover:bg-sky-400 transition-all shadow-md text-center"
-        >
-          edit
-        </router-link>
-        
-        <button 
-          @click="triggerConfirmDelete"
-          class="px-8 py-1.5 bg-[#87cefa] text-black font-bold rounded-full hover:bg-red-500 hover:text-white transition-all shadow-md"
-        >
-          hapus
-        </button>
-      </div>
+  <div class="max-w-2xl mx-auto py-2">
+    <div class="flex items-center gap-2 mb-6">
+      <router-link to="/kategori" class="text-blue-600 hover:text-blue-700 font-semibold text-sm">← Kembali</router-link>
     </div>
 
-    <div v-else class="text-red-500">Kategori tidak ditemukan.</div>
+    <div v-if="isLoading" class="text-center py-10">
+      <div class="inline-block w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+    </div>
 
-    <router-link to="/kategori" class="mt-8 text-gray-400 hover:text-gray-600 flex items-center gap-2">
-      <span>← Kembali</span>
-    </router-link>
+    <GlassCard v-else-if="kategori" padding="lg">
+      <div class="flex items-start gap-4 mb-4">
+        <div class="w-16 h-16 rounded-2xl flex items-center justify-center text-3xl bg-gradient-to-br from-blue-200 to-cyan-200 shadow">
+          📂
+        </div>
+        <div class="flex-1 min-w-0">
+          <h1 class="font-kaushan text-3xl text-gray-800">{{ kategori.nama_kategori }}</h1>
+          <p class="text-xs text-gray-500 mt-1">ID #{{ kategori.id }}</p>
+        </div>
+      </div>
 
-    <AlertModal 
-  :show="alertConfig.show"
-  :type="alertConfig.type"
-  :title="alertConfig.title"
-  :message="alertConfig.message"
-  :show-cancel="alertConfig.showCancel"
-  @confirm="handleAlertConfirm"
-  @cancel="handleAlertCancel"
-/>
+      <div class="flex gap-2 mt-4 flex-wrap">
+        <router-link :to="`/Edit_Kategori/${kategori.id}`">
+          <GradientButton variant="primary">Edit</GradientButton>
+        </router-link>
+      </div>
+    </GlassCard>
+
+    <div v-else class="text-center py-20 opacity-60">
+      <p class="font-kaushan text-3xl text-gray-400">Kategori tidak ditemukan</p>
+    </div>
   </div>
 </template>
 
 <script setup>
-import { onMounted, reactive } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
+import { ref, onMounted } from 'vue';
+import { useRoute } from 'vue-router';
 import { useKategoriStore } from '@/Stores/Kategori';
-import { storeToRefs } from 'pinia';
-import AlertModal from "../components/AlertModal.vue"; 
+import GlassCard from '@/components/GlassCard.vue';
+import GradientButton from '@/components/GradientButton.vue';
 
 const route = useRoute();
-const router = useRouter();
 const kategoriStore = useKategoriStore();
+const kategori = ref(null);
+const isLoading = ref(true);
 
-const { currentKategori, isLoading } = storeToRefs(kategoriStore);
-
-const alertConfig = reactive({
-  show: false,
-  type: 'success',
-  title: '',
-  message: '',
-  isConfirming: false,
-  showCancel: false 
-});
-
-// --- PERBAIKAN: Fungsi ini HARUS ADA agar data muncul ---
 onMounted(async () => {
-  const id = route.params.id;
-  if (id) {
-    await kategoriStore.fetchKategoriById(id);
-  }
+  kategori.value = await kategoriStore.fetchKategoriById(route.params.id);
+  isLoading.value = false;
 });
-
-const triggerConfirmDelete = () => {
-  alertConfig.type = 'error'; 
-  alertConfig.title = 'Konfirmasi';
-  alertConfig.message = 'Apakah anda yakin ingin menghapus kategori ini?';
-  alertConfig.isConfirming = true;
-  alertConfig.showCancel = true; 
-  alertConfig.show = true;
-};
-
-const handleAlertCancel = () => {
-  alertConfig.show = false;
-  alertConfig.isConfirming = false;
-  alertConfig.showCancel = false;
-};
-
-const handleAlertConfirm = async () => {
-  if (alertConfig.isConfirming) {
-    alertConfig.show = false; 
-    alertConfig.isConfirming = false;
-    alertConfig.showCancel = false;
-
-    const success = await kategoriStore.deleteKategori(route.params.id);
-    
-    if (success) {
-      alertConfig.type = 'success';
-      alertConfig.title = 'Berhasil!';
-      alertConfig.message = 'Kategori telah dihapus dari sistem.';
-      alertConfig.show = true;
-    } else {
-      alertConfig.type = 'error';
-      alertConfig.title = 'Gagal!';
-      alertConfig.message = 'Gagal menghapus kategori.';
-      alertConfig.show = true;
-    }
-  } else {
-    alertConfig.show = false;
-    if (alertConfig.type === 'success') {
-      router.push('/kategori');
-    }
-  }
-};
 </script>
 
 <style scoped>
-.font-kaushan {
-  font-family: 'Kaushan Script', cursive;
-}
+@import url('https://fonts.googleapis.com/css2?family=Kaushan+Script&display=swap');
+.font-kaushan { font-family: 'Kaushan Script', cursive; }
 </style>

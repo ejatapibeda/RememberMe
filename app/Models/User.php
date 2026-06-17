@@ -22,6 +22,12 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'telegram_chat_id',
+        'telegram_username',
+        'telegram_bot_token',
+        'telegram_link_code',
+        'telegram_link_expires_at',
+        'telegram_linked_at',
     ];
 
     /**
@@ -32,6 +38,8 @@ class User extends Authenticatable
     protected $hidden = [
         'password',
         'remember_token',
+        'telegram_bot_token',
+        'telegram_link_code',
     ];
 
     /**
@@ -44,7 +52,20 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'telegram_bot_token' => 'encrypted',
+            'telegram_link_expires_at' => 'datetime',
+            'telegram_linked_at' => 'datetime',
         ];
+    }
+
+    public function notifications()
+    {
+        return $this->hasMany(\App\Models\AppNotification::class)->latest();
+    }
+
+    public function hasTelegramLinked(): bool
+    {
+        return ! empty($this->telegram_chat_id);
     }
 
     // Tambahkan di dalam class User

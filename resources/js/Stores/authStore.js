@@ -1,6 +1,7 @@
 import { defineStore } from "pinia";
 import { ref, computed } from "vue";
 import api from "@/axios"; // Pastikan path ke axios.js benar
+import { useNotificationStore } from "@/Stores/notificationStore";
 
 export const useAuthStore = defineStore("auth", () => {
     // ---------------- STATE ----------------
@@ -52,6 +53,11 @@ export const useAuthStore = defineStore("auth", () => {
             localStorage.setItem("name", response.data.user.name);
             localStorage.setItem("email", response.data.user.email);
 
+            // Start notification polling
+            try {
+                useNotificationStore().startPolling();
+            } catch (e) { /* noop */ }
+
             return true;
         } catch (error) {
             if (error.response?.status === 401) {
@@ -74,7 +80,69 @@ export const useAuthStore = defineStore("auth", () => {
         localStorage.removeItem("authToken");
         localStorage.removeItem("name");
         localStorage.removeItem("email");
+        try { useNotificationStore().reset(); } catch (e) { /* noop */ }
         // Tidak perlu hapus header manual karena interceptor akan membaca token = null
+    };
+
+    // ---------------- TELEGRAM ----------------
+    const getTelegramStatus = async () => {
+        try {
+            const res = await api.get("/telegram/status");
+            return res.data;
+        } catch (e) {
+            return null;
+        }
+    };
+
+    const generateTelegramCode = async () => {
+        try {
+            const res = await api.post("/telegram/link-code");
+            return res.data;
+        } catch (e) {
+            return { success: false, message: "Gagal membuat kode" };
+        }
+    };
+
+    const unlinkTelegram = async () => {
+        try {
+            const res = await api.post("/telegram/unlink");
+            return res.data;
+        } catch (e) {
+            return { success: false };
+        }
+    };
+
+    const saveCustomBot = async (payload) => {
+        try {
+            const res = await api.post("/telegram/custom-bot", payload);
+            return res.data;
+        } catch (e) {
+            return {
+                success: false,
+                message: e.response?.data?.message || "Gagal menyimpan bot pribadi",
+            };
+        }
+    };
+
+    const removeCustomBot = async () => {
+        try {
+            const res = await api.delete("/telegram/custom-bot");
+            return res.data;
+        } catch (e) {
+            return { success: false };
+        }
+    };
+
+    const testTelegram = async () => {
+        try {
+            const res = await api.post("/telegram/test");
+            return res.data;
+        } catch (e) {
+            return {
+                success: false,
+                message: e.response?.data?.message || "Gagal mengirim pesan test",
+            };
+        }
     };
 
     // ---------------- UPDATE PROFILE ----------------
@@ -91,7 +159,15 @@ export const useAuthStore = defineStore("auth", () => {
         
         return { success: true, message: "Profil berhasil diperbarui!" };
     } catch (error) {
-        // ... (sisanya tetap sama)
+        if (error.response?.status === 422) {
+            errors.value = error.response.data.errors;
+        }
+        return {
+            success: false,
+            message: error.response?.data?.message || "Gagal memperbarui profil",
+        };
+    } finally {
+        isLoading.value = false;
     }
 };
 
@@ -142,5 +218,12 @@ const resetPassword = async (formData) => {
         register,
         login,
         logout,
+        // telegram
+        getTelegramStatus,
+        generateTelegramCode,
+        unlinkTelegram,
+        saveCustomBot,
+        removeCustomBot,
+        testTelegram,
     };
 });

@@ -28,6 +28,14 @@
               class="px-5 py-2 rounded-full text-sm font-medium text-gray-600 hover:text-blue-600 transition-all">
               History
             </router-link>
+            <router-link to="/recurring" active-class="bg-white shadow-sm text-blue-600"
+              class="px-5 py-2 rounded-full text-sm font-medium text-gray-600 hover:text-blue-600 transition-all">
+              Rutinitas
+            </router-link>
+          </div>
+
+          <div class="ml-2">
+            <NotificationBell />
           </div>
 
           <div class="relative ml-2">
@@ -87,6 +95,7 @@
             <router-link to="/tugas" @click="menuOpen = false" class="p-3 rounded-2xl hover:bg-blue-50 text-gray-700 font-medium transition-colors">Tugas</router-link>
             <router-link to="/kategori" @click="menuOpen = false" class="p-3 rounded-2xl hover:bg-blue-50 text-gray-700 font-medium transition-colors">Kategori</router-link>
             <router-link to="/history" @click="menuOpen = false" class="p-3 rounded-2xl hover:bg-blue-50 text-gray-700 font-medium transition-colors">History</router-link>
+            <router-link to="/recurring" @click="menuOpen = false" class="p-3 rounded-2xl hover:bg-blue-50 text-gray-700 font-medium transition-colors">Rutinitas</router-link>
             <router-link to="/profil" @click="menuOpen = false" class="p-3 rounded-2xl hover:bg-blue-50 text-gray-700 font-medium transition-colors">Profil Saya</router-link>
 
             <div class="h-px bg-gray-100 my-2"></div>
@@ -115,6 +124,7 @@
 
 <script setup>
 import { ref, computed } from "vue";
+import NotificationBell from "@/components/NotificationBell.vue";
 import { useAuthStore } from "@/Stores/authStore";
 import { storeToRefs } from "pinia";
 import { useRouter } from "vue-router";

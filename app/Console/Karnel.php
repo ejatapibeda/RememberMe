@@ -11,8 +11,9 @@ class Kernel extends ConsoleKernel
      * Daftarkan perintah (commands) untuk aplikasi.
      */
     protected $commands = [
-        // Mendaftarkan file SendTaskReminders yang baru dibuat
         Commands\SendTaskReminders::class,
+        Commands\TelegramPoll::class,
+        Commands\TelegramSetWebhook::class,
     ];
 
     /**

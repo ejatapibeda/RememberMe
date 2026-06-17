@@ -9,3 +9,7 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote');
 // Schedule::command('app:send-task-reminders')->everyMinute();
 Schedule::command('app:send-task-reminders')->everyMinute()->appendOutputTo(storage_path('logs/scheduler.log'));
+
+Schedule::call(function () {
+    app(\App\Services\RecurringNotificationService::class)->processDueReminders();
+})->everyMinute()->name('recurring-reminders')->withoutOverlapping();

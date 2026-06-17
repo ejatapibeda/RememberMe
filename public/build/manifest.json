@@ -16,7 +16,7 @@
     "src": "node_modules/@fortawesome/fontawesome-free/webfonts/fa-v4compatibility.woff2"
   },
   "resources/css/app.css": {
-    "file": "assets/app-D_INJALp.css",
+    "file": "assets/app-B2K21dhq.css",
     "src": "resources/css/app.css",
     "isEntry": true,
     "names": [
@@ -24,13 +24,13 @@
     ]
   },
   "resources/js/app.js": {
-    "file": "assets/app-DjCZJdjZ.js",
+    "file": "assets/app-DMbnYOYJ.js",
     "name": "app",
     "src": "resources/js/app.js",
     "isEntry": true,
     "css": [
-      "assets/app--NARMNDE.css",
-      "assets/app-D_INJALp.css"
+      "assets/app-DYxuD8TE.css",
+      "assets/app-B2K21dhq.css"
     ],
     "assets": [
       "assets/logo-O_GArCAP.png",

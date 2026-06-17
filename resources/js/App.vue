@@ -48,8 +48,14 @@ function capitalize(text) {
   opacity: 0;
 }
 
-body {
-  background-color: #F0F7FF;
+html, body {
   margin: 0;
+  min-height: 100%;
+  background:
+    radial-gradient(1200px 600px at 10% -10%, rgba(96, 165, 250, 0.18), transparent 60%),
+    radial-gradient(900px 500px at 110% 10%, rgba(244, 114, 182, 0.14), transparent 60%),
+    radial-gradient(900px 700px at 50% 110%, rgba(251, 191, 36, 0.12), transparent 60%),
+    linear-gradient(180deg, #F2F7FF 0%, #EFF6FF 100%);
+  background-attachment: fixed;
 }
 </style>

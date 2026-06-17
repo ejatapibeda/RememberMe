@@ -1,132 +1,111 @@
 <template>
-    <div class="min-h-screen flex flex-col items-center justify-center  py-10 px-4">
-        <h1 class="font-kaushan text-4xl text-black mb-8">Buat Tugas</h1>
-
-        <div class="w-full max-w-md bg-[#D0C9FF] rounded-[40px] p-8 shadow-xl flex flex-col items-center gap-5">
-            <div class="w-full">
-                <label class="block text-sm font-bold text-gray-700 mb-1 px-1">Batas Waktu</label>
-                <input type="datetime-local" v-model="form.date"
-                    class="w-full px-4 py-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-400 text-gray-700 shadow-sm bg-white" />
-            </div>
-
-            <div class="w-full">
-                <label class="block text-sm font-bold text-gray-700 mb-1 px-1">Kategori</label>
-                <select v-model="form.id_kategori"
-                    class="w-full px-4 py-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-400 text-gray-700 shadow-sm bg-white">
-                    <option value="" disabled selected>
-                        {{ loadingKategori ? 'Memuat Kategori...' : 'Pilih Kategori' }}
-                    </option>
-                    <option v-for="cat in kategoriList" :key="cat.id" :value="cat.id">
-                        {{ cat.nama_kategori }}
-                    </option>
-                </select>
-                <div v-if="!loadingKategori && kategoriList.length === 0" class="mt-2 text-center">
-                    <router-link to="/Create_Kategori" class="text-xs font-bold text-purple-600 underline">
-                        + Buat Kategori Baru
-                    </router-link>
-                </div>
-            </div>
-
-            <div class="w-full">
-                <label class="block text-sm font-bold text-gray-700 mb-1 px-1">Catatan</label>
-                <textarea v-model="form.task" placeholder="Apa tugasnya?" rows="4"
-                    class="w-full px-4 py-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-400 text-gray-700 placeholder-gray-400 shadow-sm resize-none"></textarea>
-            </div>
-
-            <div @click="form.isPriority = !form.isPriority"
-                :class="[form.isPriority ? 'bg-green-200' : 'bg-green-50', 'flex items-center gap-3 px-5 py-2 rounded-full cursor-pointer shadow-sm transition-all select-none border border-green-200']">
-                <div class="w-5 h-5 bg-white rounded-md flex items-center justify-center border border-gray-200">
-                    <div v-if="form.isPriority" class="w-3 h-3 bg-green-500 rounded-sm"></div>
-                </div>
-                <span class="text-gray-700 font-bold text-sm">Prioritas</span>
-            </div>
-
-            <button @click="submitTask" :disabled="loadingTugas"
-                class="mt-4 flex items-center gap-2 bg-[#FFD6D6] px-10 py-3 rounded-full shadow-lg hover:bg-pink-200 hover:scale-105 active:scale-95 transition-all disabled:opacity-50">
-                <PlusCircleIcon class="w-6 h-6 text-black" />
-                <span class="font-kaushan text-2xl text-black">Buat Tugas</span>
-            </button>
-        </div>
+  <div class="max-w-2xl mx-auto py-2">
+    <div class="flex items-center gap-2 mb-6">
+      <router-link to="/tugas" class="text-blue-600 hover:text-blue-700 font-semibold text-sm">← Kembali</router-link>
     </div>
+    <h1 class="font-kaushan text-4xl text-gray-800 mb-6">Buat Tugas Baru</h1>
 
-    <AlertModal 
-        :show="alert.show" 
-        :title="alert.title" 
-        :message="alert.message" 
-        :type="alert.type"
-        @confirm="closeAlert" 
-    />
+    <GlassCard padding="lg">
+      <div class="space-y-5">
+        <div>
+          <label class="text-[10px] font-bold text-blue-600 uppercase tracking-widest">Batas Waktu</label>
+          <input type="datetime-local" v-model="form.date"
+            class="mt-1 w-full px-4 py-3 bg-white/80 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-blue-400 focus:outline-none text-sm" />
+        </div>
+
+        <div>
+          <label class="text-[10px] font-bold text-blue-600 uppercase tracking-widest">Kategori</label>
+          <select v-model="form.id_kategori"
+            class="mt-1 w-full px-4 py-3 bg-white/80 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-blue-400 focus:outline-none text-sm">
+            <option value="" disabled>{{ loadingKategori ? 'Memuat...' : 'Pilih kategori' }}</option>
+            <option v-for="cat in kategoriList" :key="cat.id" :value="cat.id">{{ cat.nama_kategori }}</option>
+          </select>
+          <router-link v-if="!loadingKategori && kategoriList.length === 0" to="/Create_kategori"
+            class="text-xs font-bold text-blue-600 underline mt-2 inline-block">+ Buat kategori dulu</router-link>
+        </div>
+
+        <div>
+          <label class="text-[10px] font-bold text-blue-600 uppercase tracking-widest">Catatan / Tugas</label>
+          <textarea v-model="form.task" rows="4" placeholder="Apa yang harus dikerjakan?"
+            class="mt-1 w-full px-4 py-3 bg-white/80 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-blue-400 focus:outline-none text-sm resize-none"></textarea>
+        </div>
+
+        <button @click="form.isPriority = !form.isPriority"
+          class="inline-flex items-center gap-3 px-4 py-2.5 rounded-2xl border transition-all w-full"
+          :class="form.isPriority
+            ? 'bg-gradient-to-r from-amber-100 to-orange-100 border-amber-300'
+            : 'bg-white/80 border-gray-200 hover:border-amber-300'">
+          <span class="w-5 h-5 rounded-md flex items-center justify-center"
+            :class="form.isPriority ? 'bg-amber-500 text-white' : 'border-2 border-gray-300'">
+            <CheckIcon v-if="form.isPriority" class="w-3 h-3" />
+          </span>
+          <span class="text-sm font-semibold text-gray-700">🔥 Tandai sebagai Prioritas</span>
+        </button>
+
+        <div class="flex gap-2 pt-2">
+          <GradientButton variant="primary" :loading="loadingTugas" @click="submitTask">
+            <PlusCircleIcon class="w-5 h-5" /> Simpan Tugas
+          </GradientButton>
+          <router-link to="/tugas">
+            <GradientButton variant="ghost">Batal</GradientButton>
+          </router-link>
+        </div>
+      </div>
+    </GlassCard>
+
+    <AlertModal :show="alert.show" :title="alert.title" :message="alert.message" :type="alert.type" @confirm="closeAlert" />
+  </div>
 </template>
 
 <script setup>
 import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { storeToRefs } from 'pinia';
-import { PlusCircleIcon } from '@heroicons/vue/24/outline';
-
-import AlertModal from '../components/AlertModal.vue'; // Import komponen
+import { PlusCircleIcon, CheckIcon } from '@heroicons/vue/24/outline';
+import AlertModal from '@/components/AlertModal.vue';
+import GlassCard from '@/components/GlassCard.vue';
+import GradientButton from '@/components/GradientButton.vue';
 import { useKategoriStore } from '@/Stores/Kategori';
 import { useTugasStore } from '@/Stores/Tugas';
 
 const router = useRouter();
 const kategoriStore = useKategoriStore();
 const tugasStore = useTugasStore();
-
 const { kategoriList, isLoading: loadingKategori } = storeToRefs(kategoriStore);
 const { isLoading: loadingTugas } = storeToRefs(tugasStore);
 
 const form = ref({ date: '', id_kategori: '', task: '', isPriority: false });
-
-// State untuk AlertModal
 const alert = ref({ show: false, title: '', message: '', type: 'success' });
 
 onMounted(() => kategoriStore.fetchKategori());
 
 const submitTask = async () => {
-    // Validasi input
-    if (!form.value.id_kategori || !form.value.task || !form.value.date) {
-        alert.value = {
-            show: true,
-            title: 'Ups!',
-            message: 'Semua kolom wajib diisi ya!',
-            type: 'error'
-        };
-        return;
-    }
-
-    const result = await tugasStore.createTugas({
-        id_kategori: form.value.id_kategori,
-        tanggal: form.value.date,
-        tugas: form.value.task,
-        prioritas: form.value.isPriority ? 'ya' : 'tidak'
-    });
-
-    if (result.success) {
-        alert.value = {
-            show: true,
-            title: 'Berhasil!',
-            message: 'Tugas kamu sudah tersimpan.',
-            type: 'success'
-        };
-    } else {
-        alert.value = {
-            show: true,
-            title: 'Gagal!',
-            message: result.message || 'Terjadi gangguan pada server.',
-            type: 'error'
-        };
-    }
+  if (!form.value.id_kategori || !form.value.task || !form.value.date) {
+    alert.value = { show: true, title: 'Ups!', message: 'Semua kolom wajib diisi.', type: 'error' };
+    return;
+  }
+  const r = await tugasStore.createTugas({
+    id_kategori: form.value.id_kategori,
+    tanggal: form.value.date,
+    tugas: form.value.task,
+    prioritas: form.value.isPriority ? 'ya' : 'tidak',
+  });
+  alert.value = {
+    show: true,
+    title: r.success ? 'Berhasil!' : 'Gagal!',
+    message: r.success ? 'Tugas kamu sudah tersimpan.' : (r.message || 'Terjadi gangguan pada server.'),
+    type: r.success ? 'success' : 'error',
+  };
 };
 
 const closeAlert = () => {
-    const wasSuccess = alert.value.type === 'success';
-    alert.value.show = false;
-    if (wasSuccess) router.push('/tugas'); // Redirect jika sukses
+  const ok = alert.value.type === 'success';
+  alert.value.show = false;
+  if (ok) router.push('/tugas');
 };
 </script>
 
 <style scoped>
-@import url('https://fonts.googleapis.com/css2?family=Kaushan+Script&family=Poppins:wght@400;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Kaushan+Script&family=Poppins:wght@400;500;600;700&display=swap');
 .font-kaushan { font-family: 'Kaushan Script', cursive; }
-.font-poppins { font-family: 'Poppins', sans-serif; }
 </style>
